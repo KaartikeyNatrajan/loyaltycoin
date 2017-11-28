@@ -42,7 +42,6 @@ contract('LoyaltyCoin', function(accounts) {
 
     return LoyaltyCoin.deployed().then(function(instance) {
       coin = instance;
-      coin.addCoin.call(account_one, 100);
       return coin.getBalance.call(account_one);
     }).then(function(balance) {
       account_one_starting_balance = balance.toNumber();
