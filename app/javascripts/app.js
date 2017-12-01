@@ -1,123 +1,40 @@
 // Import the page's CSS. Webpack will know what to do with it.
 import "../stylesheets/app.css";
 import Bootstrap from 'bootstrap/dist/css/bootstrap.css'; // eslint-disable-line no-unused-vars
+
 // Import libraries we need.
 import { default as Web3} from 'web3';
 import { default as contract } from 'truffle-contract'
 
 // Import our contract artifacts and turn them into usable abstractions.
 import loyaltycoin_artifacts from '../../build/contracts/LoyaltyCoin.json'
+import user_artifacts from '../../build/contracts/User.json'
 
-// LoyaltyCoin is our usable abstraction, which we'll use through the code below.
-var LoyaltyCoin = contract(loyaltycoin_artifacts);
-
-// The following code is simple to show off interacting with your contracts.
-// As your needs grow you will likely need to change its form and structure.
-// For application bootstrapping, check out window.addEventListener below.
-var accounts;
-var account;
+// LoyaltyCoin and User are our usable abstractions, which we'll use through the code below.
+window.LoyaltyCoin = contract(loyaltycoin_artifacts);
+window.User = contract(user_artifacts);
 
 window.App = {
 	start: function() {
-		var self = this;
-
 		// Bootstrap the LoyaltyCoin abstraction for Use.
 		LoyaltyCoin.setProvider(web3.currentProvider);
 
-		// Get the initial account balance so it can be displayed.
-		web3.eth.getAccounts(function(err, accs) {
-			if (err != null) {
-				alert("There was an error fetching your accounts.");
-				return;
-			}
-
-			if (accs.length == 0) {
-				alert("Couldn't get any accounts! Make sure your Ethereum client is configured correctly.");
-				return;
-			}
-
-			accounts = accs;
-			account = accounts[0];
-
-			self.refreshBalance();
-			self.showAllBalances(accounts);
-
-		});
+		// Bootstrap the User abstraction for Use.
+		User.setProvider(web3.currentProvider);
+	
+		this.checkLogin();
 	},
 
-	setStatus: function(message) {
-		var status = document.getElementById("status");
-		status.innerHTML = message;
-	},
-
-	refreshBalance: function() {
-		var self = this;
-
-		var coin;
-		LoyaltyCoin.deployed().then(function(instance) {
-			coin = instance;
-			return coin.getBalance.call(account, {from: account});
-		}).then(function(value) {
-			var balance_element = document.getElementById("balance");
-			balance_element.innerHTML = value.valueOf();
-		}).catch(function(e) {
-			console.log(e);
-			self.setStatus("Error getting balance; see log.");
-		});
-	},
-
-	showAllBalances: function(accounts) {
-		var coin;
-		console.log(accounts);
-		var balancesHolder = document.getElementById('balances');
-		LoyaltyCoin.deployed().then(function(instance) {
-			coin = instance;
-			for (var i = accounts.length - 1; i >= 0; i--) {
-				var bal = coin.getBalance.call(accounts[i], {from: account});
-				bal.then(function(value) {
-					balancesHolder.innerHTML +=  value.valueOf() + "</br>";	
-				});
-			}
-		}).catch(function(e) {
-			console.log(e);
-		});
-	},
-
-	sendCoin: function() {
-		var self = this;
-
-		var amount = parseInt(document.getElementById("amount").value);
-		var receiver = document.getElementById("receiver").value;
-
-		this.setStatus("Initiating transaction... (please wait)");
-
-		var coin;
-		LoyaltyCoin.deployed().then(function(instance) {
-			coin = instance;
-			return coin.sendCoin(receiver, amount, {from: account});
-		}).then(function() {
-			self.setStatus("Transaction complete!");
-			self.refreshBalance();
-		}).catch(function(e) {
-			console.log(e);
-			self.setStatus("Error sending coin; see log.");
-		});
-	},
-
-	availService: function() {
-		var self = this;
-		var coin;
-		LoyaltyCoin.deployed().then(function(instance) {
-			coin = instance;
-			return coin.userAvailedService(accounts[1], 500, {from: accounts[0]});
-		}).then(function() {
-			self.setStatus("Transaction complete!");
-			self.refreshBalance();
-		}).catch(function(e) {
-			console.log(e);
-			self.setStatus("Error receiving coin; see log.");
-		});
+	checkLogin: function() {
+		if(window.location.href.search("auth") >= 0) {
+			return;
+		}
+		// if logged in is not set to true in session storage, redirect to login page
+		if(!sessionStorage.getItem("loggedIn")) {
+			window.location.replace(window.location.origin + "/auth/login.html");
+		}
 	}
+
 };
 
 window.addEventListener('load', function() {

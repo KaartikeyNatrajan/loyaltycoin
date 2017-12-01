@@ -12,11 +12,11 @@ contract LoyaltyCoin {
 
 	event Transfer(address indexed _from, address indexed _to, uint256 _value);
 
-	function LoyaltyCoin() {
+	function LoyaltyCoin() public {
 		balances[tx.origin] = 1000;
 	}
 
-	function sendCoin(address receiver, uint amount) returns(bool sufficient) {
+	function sendCoin(address receiver, uint amount) public returns(bool sufficient) {
 		if (balances[msg.sender] < amount) return false;
 		balances[msg.sender] -= amount;
 		balances[receiver] += amount;
@@ -24,15 +24,15 @@ contract LoyaltyCoin {
 		return true;
 	}
 
-	function getBalanceInEth(address addr) returns(uint) {
+	function getBalanceInEth(address addr) public view returns(uint) {
 		return ConvertLib.convert(getBalance(addr),2);
 	}
 
-	function getBalance(address addr) returns(uint newBalance) {
+	function getBalance(address addr) public view returns(uint newBalance) {
 		return balances[addr];
 	}
 
-	function userAvailedService(address receiver, uint amount) returns (uint newBalance) {
+	function userAvailedService(address receiver, uint amount) public returns (uint newBalance) {
 		balances[receiver] += ConvertLib.convert(amount, 5);
 		return balances[receiver];
 	}
