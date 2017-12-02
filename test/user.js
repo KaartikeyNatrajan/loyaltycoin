@@ -8,4 +8,14 @@ contract('User', function(accounts) {
       assert.equal(success, true, "user created");
     });
   });
+
+  it("should fetch all users", function() {
+    return User.deployed().then(function(instance) {
+      return instance.users.call({from: accounts[0]});
+    }).then(function(data) {
+      console.log(data);
+      // assert.equal(success, true, "user created");
+    });
+  });  
+
 });

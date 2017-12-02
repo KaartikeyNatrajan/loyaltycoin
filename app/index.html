@@ -13,15 +13,19 @@
 		</div>
 	
 		<div class="row">
-			<div class="col-md-6 page-section">
-				<h1>User facing wallet application</h1>
-				<h3>You have <span class="black"><span id="balance"></span> Loyalty Coins</span></h3>
+			<div class="col-md-6 col-md-offset-3">
+				<div class="welcome-info">
+					<h3>Welcome <span id="username"></span></h3>
+					<h4>Account ID : <span id="accountid"></span></h4>
+				</div>
+				
+				
+				<div id="balance-info">
+					<table class="table" id="balance-table">
+						
+					</table>
+				</div>
 
-				<br>
-				<h1>Send Loyalty Coin</h1>
-				<br><label for="amount">Amount:</label><input type="text" id="amount" placeholder="e.g., 95"></input>
-				<br><label for="receiver">To Address:</label><input type="text" id="receiver" placeholder="e.g., 0x93e66d9baea28c17d9fc393b53e3fbdd76899dae"></input>
-				<br><br><button id="send" onclick="AccountManager.sendCoin()">Send Loyalty Coin</button>
 				<br><br>
 				<span id="status"></span>
 				<br>
@@ -30,10 +34,6 @@
 				<p id="balances">
 
 				</p>
-			</div>
-			<div class="col-md-6 page-section">
-				<h1>Hotel application</h1>
-				<br><br><button id="send" onclick="AccountManager.availService()">User has availed Service</button>
 			</div>
 		</div>
 	</div>

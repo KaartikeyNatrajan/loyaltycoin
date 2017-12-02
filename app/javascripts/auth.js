@@ -13,19 +13,14 @@ window.Auth = {
 		var password = document.getElementById('password').value;
 
 		// create an etherium account with password
-		account = web3.personal.newAccount(password)
-
+		account = web3.personal.newAccount(password);
+		web3.personal.unlockAccount(account, password, 15000);
+		
 		// add account to user base
 		User.deployed().then(function(instance) {
 			user = instance;
-			return user.addUser.call(name, email, password, {from: account});
-		}).then(function(response) {
-			console.log(response);
-			if (response == true) {
-				self.loginSuccess(account);
-			} else {
-				alert("error creating account");
-			}
+			user.addUser(name, email, password, {from: account, gasPrice: 0, gas: 900000});
+			self.loginSuccess(account);
 		}).catch(function(e) {
 			console.log(e);
 		});
@@ -33,16 +28,16 @@ window.Auth = {
 
 	loginUser: function() {
 		var self = this;
-		var account = document.getElementById("account").value;
+		var accountNumber = document.getElementById("account").value;
 		var password = document.getElementById("password").value;
-		console.log(account, password);
+		console.log(accountNumber, password);
 		User.deployed().then(function(instance) {
 			user = instance;
-			return user.authenticate.call(password, {from: account});
+			return user.authenticate.call(password, {from: accountNumber});
 		}).then(function(response) {
 			console.log(response);
 			if (response == true) {
-				self.loginSuccess(account);
+				self.loginSuccess(accountNumber);
 			} else {
 				alert("error logging in");
 			}
@@ -55,5 +50,29 @@ window.Auth = {
 		sessionStorage.setItem("account", account);
 		sessionStorage.setItem("loggedIn", true);
 		window.location.replace(window.location.origin + "/");
+	},
+
+	initializeListener: function() {
+		console.log("listening");
+		const filter = web3.eth.filter({
+			fromBlock: 0,
+			toBlock: 'latest',
+			address:  '0xe3e7ffb1810175cddb3670470f6c955fcb30f380ca43fd15ed823fa93047f5ce',
+			topics: [web3.sha3('UserAdded(bool success)')]
+		});
+
+		filter.watch((error, result) => {
+			if(!error) {
+				console.log(result);
+			} else {
+				console.log(error);
+			}
+		})
 	}
+
 };
+
+window.addEventListener('load', function(event) {
+	// initialize filter to listen for user created event
+	setTimeout(200, Auth.initializeListener());
+});

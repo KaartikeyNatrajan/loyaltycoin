@@ -10,60 +10,86 @@ contract User {
 
 	enum userType { customer, hotel, airline }
 	
+	event UserAdded(bool success);
+
 	struct UserInfo {
 		address addr;
-		bytes32 name;
-		bytes32 email;
+		string name;
+		string email;
 		bytes32 password; // need to encrypt this
-		uint balance;
+		Points[] balance;
 		userType usertype;
 	}
 
-	struct HotelInfo {
+	struct Merchant {
 		address addr;
-		bytes32 name;
+		string name;
 		userType usertype;
 	}
 	
+	struct Points {
+		uint air;
+		uint hotel;
+		uint car;
+	}
+
 	// need to add visibility specifiers here
 	mapping (address => UserInfo) users;
-	mapping (address => HotelInfo) hotels;
+	mapping (address => Merchant) merchants;
 
-	function addUser (bytes32 name, bytes32 email, bytes32 password) public returns (bool success) {
-		
+	
+	function addUser (string name, string email, bytes32 password) public returns (bool success) {
 		// user already exists at the adress.
 		// User creation fails
-		if (users[msg.sender].name != "") {
-			return false;
-		}
+		// if (users[msg.sender].name != "") {
+		// 	return false;
+		// }
 
 		// user does not exist. Control reaches here
 
 		// need to check for existing email in existing users
 
+		UserInfo storage temp;
+		temp.addr = msg.sender;
+		temp.name = name;
+		temp.email = email;
+		temp.password = password;
+		temp.usertype = userType.customer;
+
+		temp.balance.push(Points({
+			air : 20000,
+			hotel : 10000,
+			car : 5000
+		}));
+
+		temp.balance.push(Points({
+			air : 10000,
+			hotel : 70000,
+			car : 4000
+		}));		
+
 		// add mapping in user map with 'from address' -> new user info
-		users[msg.sender] = UserInfo ({
-			addr : msg.sender,
-			name : name,
-			email : email,
-			password : password,
-			balance : 0,
-			usertype : userType.customer
-		});
-		
+		users[msg.sender] = temp;
+				
+		UserAdded(true);
 		return true;
 	}
 
-	function addHotel(bytes32 name, address addr) public {
-		hotels[addr] = HotelInfo({
+	function addHotel(string name, address addr) public {
+		merchants[addr] = Merchant({
 			addr : addr,
 			name : name,
 			usertype : userType.hotel
 		});
 	}
 
-	function getUserInfo() public view returns (bytes32 name, bytes32 email, uint balance) {
-		return (users[msg.sender].name, users[msg.sender].email, users[msg.sender].balance);
+	function getUserInfo() public view returns (string name, string email, uint noOfAccounts) {
+		return (users[msg.sender].name, users[msg.sender].email, users[msg.sender].balance.length);
+	}
+
+	function getUserBalances(uint row) public view returns (uint air, uint hotel, uint car) {
+		Points memory temp = users[msg.sender].balance[row];
+		return(temp.air, temp.hotel, temp.car);
 	}
 
 	function authenticate(bytes32 password) public view returns (bool success) {
@@ -72,6 +98,6 @@ contract User {
 		}
 		
 		return false;
-	} 
+	}
 }
 

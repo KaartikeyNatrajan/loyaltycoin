@@ -2,25 +2,8 @@ var accounts;
 var account;
 var userAccount;
 window.AccountManager = {
-	getAccounts: function() {
-		var self = this;
-		// Get the initial account balance so it can be displayed.
-		web3.eth.getAccounts(function(err, accs) {
-			if (err != null) {
-				alert("There was an error fetching your accounts.");
-				return;
-			}
-
-			if (accs.length == 0) {
-				alert("Couldn't get any accounts! Make sure your Ethereum client is configured correctly.");
-				return;
-			}
-
-			accounts = accs;
-			account = accounts[0];
-			self.refreshBalance();
-			self.showAllBalances();
-		});
+	getUserDetails: function() {
+		this.getPersonalInfo();
 	},
 
 	setStatus: function(message) {
@@ -28,38 +11,49 @@ window.AccountManager = {
 		status.innerHTML = message;
 	},
 
-	refreshBalance: function() {
+	getPersonalInfo: function() {
 		var self = this;
+		
+		var userName = document.getElementById("username");
+		var accountId = document.getElementById("accountid");
+		accountId.innerHTML = userAccount;
 
-		var coin;
-		LoyaltyCoin.deployed().then(function(instance) {
-			coin = instance;
-			return coin.getBalance.call(account, {from: account});
+		User.deployed().then(function(instance) {
+			return instance.getUserInfo.call({from: userAccount});
 		}).then(function(value) {
-			var balance_element = document.getElementById("balance");
-			balance_element.innerHTML = value.valueOf();
+			console.log(value);
+			userName.innerHTML = value[0];
+			self.getBalances(value[2].valueOf());
 		}).catch(function(e) {
 			console.log(e);
 			self.setStatus("Error getting balance; see log.");
 		});
 	},
 
-	showAllBalances: function() {
-		var coin;
-		console.log(accounts);
-		var balancesHolder = document.getElementById('balances');
-		LoyaltyCoin.deployed().then(function(instance) {
-			coin = instance;
-			for (var i = accounts.length - 1; i >= 0; i--) {
-				var bal = coin.getBalance.call(accounts[i], {from: account});
+	getBalances: function(noOfAccounts) {
+		var self = this;
+		var balanceTable = document.getElementById("balance-table");
+		User.deployed().then(function(instance) {
+			for (var i = noOfAccounts - 1; i >= 0; i--) {
+				var bal = instance.getUserBalances.call(i, {from: userAccount});
 				bal.then(function(value) {
-					balancesHolder.innerHTML +=  value.valueOf() + "</br>";	
+					console.log(value);
+					var tableRow = document.createElement("tr");
+					for(var j = 0; j < 3; j++) {
+						var tableColumn = document.createElement("td");
+						tableColumn.innerHTML = value[j].valueOf();
+						tableRow.appendChild(tableColumn);
+					}
+					balanceTable.appendChild(tableRow);	
 				});
 			}
 		}).catch(function(e) {
 			console.log(e);
+			self.setStatus("Error getting balance; see log.");
 		});
 	},
+
+	
 
 	sendCoin: function() {
 		var self = this;
@@ -80,22 +74,6 @@ window.AccountManager = {
 			console.log(e);
 			self.setStatus("Error sending coin; see log.");
 		});
-	},
-
-	availService: function() {
-		var self = this;
-		var coin;
-		LoyaltyCoin.deployed().then(function(instance) {
-			coin = instance;
-			return coin.userAvailedService(accounts[1], 500, {from: accounts[0]});
-		}).then(function() {
-			self.setStatus("Transaction complete!");
-			self.refreshBalance();
-			self.showAllBalances();
-		}).catch(function(e) {
-			console.log(e);
-			self.setStatus("Error receiving coin; see log.");
-		});
 	}
 }
 
@@ -103,5 +81,5 @@ window.addEventListener('load', function() {
 	// some delay so that the app can get intialized first before 
 	// this method is called
 	userAccount = sessionStorage.getItem("account");
-	setTimeout(200, AccountManager.getAccounts());
+	setTimeout(200, AccountManager.getUserDetails());
 });
